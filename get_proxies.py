@@ -1,14 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import os
+import json
+from datetime import datetime
 
 class ProxieGet:
 	def __init__(self):
+		td = datetime.now()
+		self.today = f"{td.year}-{td.month}-{td.day}"
 		self.URL = "https://free-proxy-list.net/"
 		options = Options()
 		options.add_argument("--headless")
 		print("Opening driver")
-		self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver.exe"), options = options)
+		self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver"), options = options)
 		self.proxies = []
 
 	def req(self):
@@ -25,6 +29,19 @@ class ProxieGet:
 			except ValueError:
 				pass
 
+	def create_json(self):
+		numerate = 0
+		data = {}
+		#print(self.proxies)
+		for p in self.proxies:
+			data[numerate] = p
+			numerate += 1
+		print(data)
+		print("Creating json file")
+		with open(f"proxies.json", "w") as f:
+			f.write(json.dumps(data, indent=2))
+
+
 	def close_driver(self):
 		self.driver.close()
 		print("driver closed")
@@ -32,9 +49,10 @@ class ProxieGet:
 	def run(self):
 		self.req()
 		self.close_driver()
+		self.create_json()
+		print("FINISHEd")
 
-'''
 pg = ProxieGet()
 pg.run()
-print(pg.proxies)
-'''
+#print(pg.proxies)
+

@@ -1,15 +1,14 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import random
-from get_proxies import ProxieGet
+#from get_proxies import ProxieGet
+import json
 
 class Scraper:
 
 	def __init__(self):
-		pg = ProxieGet()
-		pg.run()
-		print(pg.proxies)
-		self.PROXIES = pg.proxies
+		with open("proxies.json", "r") as f:
+			self.PROXIES = json.load(f)
 		AREA = "nt"
 		self.URL = f"http://house.ksou.cn/p.php?q={AREA}"
 		self.PROXIE = {"https": "https://195.46.20.146:21231", "http": "http://195.46.20.146:21231"}
@@ -17,15 +16,21 @@ class Scraper:
 		self.PURL = "https://api.myip.com"
 		self.DOMAIN = "http://house.ksou.cn/"
 		self.LINKS = []
+		self.bad_proxies = []
 
 	def check_proxie(self):
-		proxie_link = random.choice(self.PROXIES)
+		proxie_link = self.PROXIES[str(random.randint(0,len(self.PROXIES)))]
 		proxie = {{"https": f"https://{proxie_link}", "http": "http://{proxie_link}"}}
 		r = requests.get(self.PURL, proxies = self.PROXIE, headers = self.HEADERS)
 		print(r.text)
 
 	def send_req(self, url):
-		prox = random.choice(self.PROXIES)
+		prox = self.PROXIES[str(random.randint(0,len(self.PROXIES)))]
+		while True:
+			if prox in self.bad_proxies:
+				prox = self.PROXIES[str(random.randint(0,len(self.PROXIES)))]
+			else:
+				break
 		proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
 		print(proxie)
 		while True:
@@ -35,7 +40,8 @@ class Scraper:
 				break
 			except:
 				print(f"Bad proxie: {prox}")
-				prox = random.choice(self.PROXIES)
+				self.bad_proxies.append(prox)
+				prox = self.PROXIES[str(random.randint(0,len(self.PROXIES)))]
 				proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
 		soup = bs(r.text, "html.parser")
 		return soup
