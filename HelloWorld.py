@@ -5,6 +5,11 @@ import random
 import json
 import csv
 
+'''
+    THIS IS NOT SOME HELLO WORLD FILE, ITS A SCRAPERRRRR!!!!!!!
+'''
+
+
 class Scraper:
 
     def __init__(self):
