@@ -156,10 +156,10 @@ class Scraper:
                 info.append(i)
         self.write_to_csv(info)
 
-    def write_to_csv(self, i):
+    def write_to_csv(self, iinfo):
         with open("DATA.csv", "a") as f:
             fwriter = csv.writer(f)
-            fwriter.writerow(i)
+            fwriter.writerow(iinfo)
 
 s = Scraper()
 # s.check_proxie()
