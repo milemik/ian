@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup as bs
 import random
 # from get_proxies import ProxieGet
 import json
-
+import csv
 
 class Scraper:
 
@@ -72,6 +72,7 @@ class Scraper:
             hlinks = soup.select("span.addr")
             for hlink in hlinks:
                 h_links.append(self.DOMAIN + hlink.select("a")[0]["href"])
+            page_counter = 0
             while True:
                 next_page = None
                 alinks = soup.select("a", href=True)
@@ -80,7 +81,8 @@ class Scraper:
                         next_page = self.DOMAIN + a['href']
                 # if you find next page, go to next page
                 if next_page != None:
-                    print("Going to the next_page")
+                    next_page += 1
+                    print(f"Going to the next_page: {page_counter}")
                     soup = self.send_req(next_page)
                     # get home links
                     hlinks = soup.select("span.addr")
@@ -142,7 +144,17 @@ class Scraper:
         print("Distance: %s" % distance)
         print("Property Description: %s" % pp_des)
         print("Recent Sold: %s" % recend_sold)
+        
+        info = [address, sold, last_sold, land_size, agent, distance, pp_des]
+        for r in recend_sold:
+            for i in r:
+                info.append(i)
+        self.write_to_csv(info)
 
+    def write_to_csv(self, i):
+        with open("DATA.csv", "a") as f:
+            fwriter = csv.writer(f)
+            fwriter.writerow(i)
 
 s = Scraper()
 # s.check_proxie()
