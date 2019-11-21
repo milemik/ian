@@ -12,12 +12,12 @@ from time import sleep
 '''
 
 
-class Scraper:
+class SScraper:
 
-    def __init__(self):
+    def __init__(self, area):
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
-        self.AREA = "nt"
+        self.AREA = area
         self.URL = f"http://house.speakingsame.com/profile.php?q={self.AREA}"
         #self.PROXIE = {"https": "https://195.46.20.146:21231",
         #               "http": "http://195.46.20.146:21231"}
@@ -62,7 +62,7 @@ class Scraper:
                     prox = self.PROXIES[str(
                         random.randint(0, len(self.PROXIES) - 1))]
                     proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
-            except:
+            except requests.exceptions.RequestException:
                 print(f"Bad proxie: {prox}")
                 error_count += 1
                 if error_count >= len(self.PROXIES):
@@ -280,8 +280,9 @@ class Scraper:
         with open(f"SDATA-{self.AREA}.csv", "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
-
-s = Scraper()
+'''
+s = SScraper()
 # s.check_proxie()
 s.get_links()
 s.get_info()
+'''

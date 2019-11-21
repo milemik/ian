@@ -10,13 +10,13 @@ import csv
 '''
 
 
-class Scraper:
+class HScraper:
 
-    def __init__(self):
+    def __init__(self, area):
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
-        AREA = "nt"
-        self.URL = f"http://house.ksou.cn/p.php?q={AREA}"
+        self.AREA = area
+        self.URL = f"http://house.ksou.cn/p.php?q={self.AREA}"
         self.PROXIE = {"https": "https://195.46.20.146:21231",
                        "http": "http://195.46.20.146:21231"}
         self.HEADERS = {
@@ -27,14 +27,6 @@ class Scraper:
         self.bad_proxies = []
 
     def check_proxie(self):
-        proxie_link = self.PROXIES[str(
-            random.randint(0, len(self.PROXIES) - 1))]
-        proxie = {{"https": f"https://{proxie_link}",
-                   "http": "http://{proxie_link}"}}
-        r = requests.get(self.PURL, proxies=self.PROXIE, headers=self.HEADERS)
-        print(r.text)
-
-    def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
         while True:
             if prox in self.bad_proxies:
@@ -44,13 +36,28 @@ class Scraper:
                 break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         print(proxie)
+        error_count = 0
         while True:
             try:
+                #print(proxie)
                 r = requests.get(url, proxies=proxie, headers=self.HEADERS)
-                print(r)
-                break
-            except:
+                #print(r)
+                if r.status_code == 200:
+                    print("RESPONSE: OK")
+                    break
+                else:
+                    error_count += 1
+                    print("RESPONSE: BAD")
+                    self.bad_proxies.append(prox)
+                    prox = self.PROXIES[str(
+                        random.randint(0, len(self.PROXIES) - 1))]
+                    proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
+            except requests.exceptions.RequestException:
                 print(f"Bad proxie: {prox}")
+                error_count += 1
+                if error_count >= len(self.PROXIES):
+                    print("All proxies are bad")
+                    break
                 self.bad_proxies.append(prox)
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
@@ -161,7 +168,9 @@ class Scraper:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 
-s = Scraper()
+'''
+s = HScraper("nt")
 # s.check_proxie()
 s.get_links()
 s.get_house_links()
+'''
