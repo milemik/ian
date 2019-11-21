@@ -4,6 +4,7 @@ import random
 # from get_proxies import ProxieGet
 import json
 import csv
+from time import sleep
 
 '''
    Suburb Profiles ARE HERE 
@@ -18,20 +19,21 @@ class Scraper:
             self.PROXIES = json.load(f)
         AREA = "nt"
         self.URL = f"http://house.speakingsame.com/profile.php?q={AREA}"
-        self.PROXIE = {"https": "https://195.46.20.146:21231",
-                       "http": "http://195.46.20.146:21231"}
+        #self.PROXIE = {"https": "https://195.46.20.146:21231",
+        #               "http": "http://195.46.20.146:21231"}
         self.HEADERS = {
-            "User-Agent": "Mozila Firefox 60.1 NT Windows 10 "}
+            "User-Agent": "Kali Linux Test"}
         self.PURL = "https://api.myip.com"
         self.DOMAIN = "http://house.ksou.cn/"
         self.LINKS = []
         self.bad_proxies = []
+        self.nap = sleep(10)
 
     def check_proxie(self):
         proxie_link = self.PROXIES[str(
             random.randint(0, len(self.PROXIES) - 1))]
         proxie = {{"https": f"https://{proxie_link}",
-                   "http": "http://{proxie_link}"}}
+                   "http": f"http://{proxie_link}"}}
         r = requests.get(self.PURL, proxies=self.PROXIE, headers=self.HEADERS)
         print(r.text)
 
@@ -45,13 +47,19 @@ class Scraper:
                 break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         print(proxie)
+        error_count = 0
         while True:
             try:
+                #print(proxie)
                 r = requests.get(url, proxies=proxie, headers=self.HEADERS)
                 print(r)
                 break
             except:
                 print(f"Bad proxie: {prox}")
+                error_count += 1
+                if error_count >= len(self.PROXIES):
+                    print("All proxies are bad")
+                    break
                 self.bad_proxies.append(prox)
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
@@ -70,136 +78,156 @@ class Scraper:
                 self.LINKS.append(x['href'])
         print("Found %d" % len(self.LINKS))
 
-    def hous_info(self, url):
-        print(url)
-        soup = self.send_req(url)
+    def get_info(self):
+        for link in self.LINKS:
+            print(link)
+            soup = self.send_req(self.DOMAIN + link)
 
-        address = house_price = municipality = num_of_houses_units = last_year = last_year_precent = last_year_high = days_on_market =  None
-        recend_sold = []
-        #Create a list of house values and house price and house rent will be there
-        #house_price, house_rent= house_list
-        house_list = []
-        # units_price, units_rent = units
-        units = []
-        #land_price, land_rent = lands
-        lands = []
-        agents = []
-        features = []
-        schools = []
+            address = house_price = municipality = num_of_houses_units = last_year = last_year_precent = last_year_high = days_on_market =  None
+            recend_sold = []
+            #Create a list of house values and house price and house rent will be there
+            #house_price, house_rent= house_list
+            house_list = []
+            # units_price, units_rent = units
+            units = []
+            #land_price, land_rent = lands
+            lands = []
+            agents = []
+            features = []
+            schools = []
 
-        td = soup.select("td")
-        tr = soup.select("tr")
-        # FIND ADDRESS
-        for numt in range(len(td)):
-            try:
-                bname = td[numt].select("b")[0]
-                if ", " in bname:
-                    address = bname
-            except:
-                pass
-        features_num = 1
+            td = soup.select("td")
+            tr = soup.select("tr")
+            # FIND ADDRESS
+            for numt in range(len(td)):
+                try:
+                    bname = td[numt].select("b")[0]
+                    if ", " in bname:
+                        address = bname
+                except:
+                    pass
+            features_num = 1
 
-        if address != None:
-            forms = soup.select("form")
-            for f in forms:
-                if "price is " in f.text:
-                last_year_precent = f.text
-            for tnum in range(len(td)):
-                if "House" == td[tnum].text:
-                    house_list.append(td[tnum+1].text)
-                if "Unit" == td[tnum].text:
-                    units.append(td[tnum+1].text)
-                if "Land" == td[tnum].text:
-                    lands.append(td[tnum+1].text)
+            if address != None:
+                forms = soup.select("form")
+                for f in forms:
+                    if "price is " in f.text:
+                        last_year_precent = f.text
+                for tnum in range(len(td)):
+                    if "House" == td[tnum].text:
+                        house_list.append(td[tnum+1].text)
+                    if "Unit" == td[tnum].text:
+                        units.append(td[tnum+1].text)
+                    if "Land" == td[tnum].text:
+                        lands.append(td[tnum+1].text)
 
-                if "Municipality" in td[tnum].text:
-                    municipality = td[tnum+2].text
-                if "Number of houses/units" in td[tnum].text:
-                    num_of_houses_units = td[tnum+2].text
-                if "Houses/units sales last 12 months" in td[tnum].text:
-                    last_year = td[tnum+2].text
-                if "Highest price last 12 months" in td[tnum].text:
-                    last_year_high = td[tnum+2].text
-                if "Days on Market" in td[tnum].text:
-                    days_on_market = td[tnum+2].text
-                if "Features" == td[tnum].text
-                    while True:
-                        features.append(td[tnum+features_num])
-                        features_num += 1
-                        if "." not in td[tnum+features_num].text:
-                            break
-                if "PopulationSize" == td[tnum].text:
-                    popul_size = td[tnum+3].text
-                    popul_size_area = td[tnum+4].text
-                    popul_size_city = td[tnum+5].text
+                    if "Municipality" in td[tnum].text:
+                        municipality = td[tnum+2].text
+                    if "Number of houses/units" in td[tnum].text:
+                        num_of_houses_units = td[tnum+2].text
+                    if "Houses/units sales last 12 months" in td[tnum].text:
+                        last_year = td[tnum+2].text
+                    if "Highest price last 12 months" in td[tnum].text:
+                        last_year_high = td[tnum+2].text
+                    if "Days on Market" in td[tnum].text:
+                        days_on_market = td[tnum+2].text
+                    if "Features" == td[tnum].text:
+                        while True:
+                            features.append(td[tnum+features_num])
+                            features_num += 1
+                            if "." not in td[tnum+features_num].text:
+                                break
+                    if "PopulationSize" == td[tnum].text:
+                        popul_size = td[tnum+3].text
+                        popul_size_area = td[tnum+4].text
+                        popul_size_city = td[tnum+5].text
 
-                if "Country of Origin" == td[tnum].text:
-                    count_of_origin = td[tnum+3].text
-                    count_of_origin_area = td[tnum+4].text
-                    count_of_origin_city = td[tnum+5].text
+                    if "Country of Origin" == td[tnum].text:
+                        count_of_origin = td[tnum+3].text
+                        count_of_origin_area = td[tnum+4].text
+                        count_of_origin_city = td[tnum+5].text
 
-                if "Born Overseas - Top 5" == td[tnum].text:
-                    born_overseas_1 = td[tnum+3].text
-                    born_overseas_1_area = td[tnum+4].text
-                    born_overseas_1_city = td[tnum+5].text
+                    if "Born Overseas - Top 5" == td[tnum].text:
+                        born_overseas_1 = td[tnum+3].text
+                        born_overseas_1_area = td[tnum+4].text
+                        born_overseas_1_city = td[tnum+5].text
 
-                    born_overseas_2 = td[tnum+6].text
-                    born_overseas_2_area = td[tnum+7].text
-                    born_overseas_2_city = td[tnum+8].text
+                        born_overseas_2 = td[tnum+6].text
+                        born_overseas_2_area = td[tnum+7].text
+                        born_overseas_2_city = td[tnum+8].text
 
-                    born_overseas_3 = td[tnum+9].text
-                    born_overseas_3_area = td[tnum+10].text
-                    born_overseas_3_city = td[tnum+11].text
+                        born_overseas_3 = td[tnum+9].text
+                        born_overseas_3_area = td[tnum+10].text
+                        born_overseas_3_city = td[tnum+11].text
 
-                    born_overseas_4 = td[tnum+12].text
-                    born_overseas_4_area = td[tnum+13].text
-                    born_overseas_4_city = td[tnum+14].text
+                        born_overseas_4 = td[tnum+12].text
+                        born_overseas_4_area = td[tnum+13].text
+                        born_overseas_4_city = td[tnum+14].text
 
-                    born_overseas_5 = td[tnum+15].text
-                    born_overseas_5_area = td[tnum+16].text
-                    born_overseas_5_city = td[tnum+17].text
+                        born_overseas_5 = td[tnum+15].text
+                        born_overseas_5_area = td[tnum+16].text
+                        born_overseas_5_city = td[tnum+17].text
 
-                if "Median household income" == td[tnum].text:
-                    income_duration = td[tnum+3].text
-                    income_duration_area = td[tnum+4].text
-                    income_duration_city = td[tnum+5].text
+                    if "Median household income" == td[tnum].text:
+                        income_duration = td[tnum+3].text
+                        income_duration_area = td[tnum+4].text
+                        income_duration_city = td[tnum+5].text
 
-                if "Assault" == td[tnum].text:
-                    crime_assault_area = td[tnum+1].text
-                    crime_assault_city = td[tnum+2].text
-                if "Damage" == td[tnum].text:
-                    crime_demage_area = td[tnum+1].text
-                    crime_demage_city = td[tnum+2].text
-                if "Robbery" == td[tnum].text:
-                    crime_robbery_area = td[tnum+1].text
-                    crime_robbery_city = td[tnum+2].text
-                if "Sexual offences" == td[tnum].text:
-                    crime_sex_offences_area = td[tnum+1].text
-                    crime_sex_offences_city = td[tnum+2].text
-                if "Theft" == td[tnum].text:
-                    crime_theft_area = td[tnum+1].text
-                    crime_theft_city = td[tnum+2].text
-                #AGENTS
-                if "Agent Name" == td[tnum].text:
-                    anum = 0
-                    while True:
-                        anum += 1
-                        if "Note: " in td[tnum+anum].text:
-                            break
-                        else:
-                            agents.append([td[tnum+anum].text, td[tnum+anum+1]])
-                         
-                if "School Name" in td[tnum].text:
-                    snum = 0
-                    while True:
-                        snum += 1
-                        if "school" not in td[tnum+snum].text:
-                            break
-                        else:
-                            schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
+                    if "Assault" == td[tnum].text:
+                        crime_assault_area = td[tnum+1].text
+                        crime_assault_city = td[tnum+2].text
+                    if "Damage" == td[tnum].text:
+                        crime_demage_area = td[tnum+1].text
+                        crime_demage_city = td[tnum+2].text
+                    if "Robbery" == td[tnum].text:
+                        crime_robbery_area = td[tnum+1].text
+                        crime_robbery_city = td[tnum+2].text
+                    if "Sexual offences" == td[tnum].text:
+                        crime_sex_offences_area = td[tnum+1].text
+                        crime_sex_offences_city = td[tnum+2].text
+                    if "Theft" == td[tnum].text:
+                        crime_theft_area = td[tnum+1].text
+                        crime_theft_city = td[tnum+2].text
+                    #AGENTS
+                    if "Agent Name" == td[tnum].text:
+                        anum = 0
+                        while True:
+                            anum += 1
+                            if "Note: " in td[tnum+anum].text:
+                                break
+                            else:
+                                agents.append([td[tnum+anum].text, td[tnum+anum+1]])
+                             
+                    if "School Name" in td[tnum].text:
+                        snum = 0
+                        while True:
+                            snum += 1
+                            if "school" not in td[tnum+snum].text:
+                                break
+                            else:
+                                schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
 
-
-        self.write_to_csv(info)
+            info = [address, house_list, units, schools, agents, municipality, num_of_houses_units, 
+                    last_year, land_rent, last_year_high, 
+                    born_overseas_1, born_overseas_1_area, born_overseas_1_city,
+                    born_overseas_2, born_overseas_2_area, born_overseas_2_city, 
+                    born_overseas_3, born_overseas_3_area, born_overseas_3_city, 
+                    born_overseas_4, born_overseas_4_area, born_overseas_4_city,
+                    born_overseas_5, born_overseas_5_area, born_overseas_5_city,
+                    income_duration, income_duration_area, income_duration_city,
+                    crime_assault_area, crime_assault_city,
+                    crime_demage_area, crime_demage_city,
+                    crime_robbery_area, crime_robbery_city,
+                    crime_sex_offences_area, crime_sex_offences_city,
+                    crime_theft_area, crime_theft_city,
+                    ]
+            print(info)
+            print("Nap time")
+            # FOR TEST IF NO PROXIES
+            self.nap
+            print("Geting next info")
+            # WE WILL WRITE IT WHEN WE SORT IT OUT :D
+            self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
         with open("SDATA.csv", "a") as f:
@@ -209,3 +237,4 @@ class Scraper:
 s = Scraper()
 # s.check_proxie()
 s.get_links()
+s.get_info()
