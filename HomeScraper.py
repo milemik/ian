@@ -85,6 +85,7 @@ class HScraper:
         print("Found %d" % len(self.LINKS))
 
     def get_house_links(self):
+        # Collect all the house links
         for link in self.LINKS:
             new_link = self.DOMAIN + link
             soup = self.send_req(new_link)
@@ -101,7 +102,7 @@ class HScraper:
                         next_page = self.DOMAIN + a['href']
                 # if you find next page, go to next page
                 if next_page != None:
-                    next_page += 1
+                    page_counter += 1
                     print(f"Going to the next_page: {page_counter}")
                     soup = self.send_req(next_page)
                     # get home links
