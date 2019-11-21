@@ -24,10 +24,9 @@ class Scraper:
         self.HEADERS = {
             "User-Agent": "Kali Linux Test"}
         self.PURL = "https://api.myip.com"
-        self.DOMAIN = "http://house.ksou.cn/"
+        self.DOMAIN = "http://house.speakingsame.com/"
         self.LINKS = []
         self.bad_proxies = []
-        self.nap = sleep(10)
 
     def check_proxie(self):
         proxie_link = self.PROXIES[str(
@@ -80,22 +79,10 @@ class Scraper:
 
     def get_info(self):
         for link in self.LINKS:
-            print(link)
-            soup = self.send_req(self.DOMAIN + link)
-
-            address = house_price = municipality = num_of_houses_units = last_year = last_year_precent = last_year_high = days_on_market =  None
-            recend_sold = []
-            #Create a list of house values and house price and house rent will be there
-            #house_price, house_rent= house_list
-            house_list = []
-            # units_price, units_rent = units
-            units = []
-            #land_price, land_rent = lands
-            lands = []
-            agents = []
-            features = []
-            schools = []
-            address = house_list = units = schools = agents = municipality = num_of_houses_units = None 
+            full_link = self.DOMAIN + link 
+            print(full_link)
+            soup = self.send_req(full_link)
+            address = house_price = house_rent = units_price = units_rent = land_price = land_rent = schools = agents = municipality = num_of_houses_units = None 
             last_year = land_rent = last_year_high = None
             born_overseas_1 = born_overseas_1_area = born_overseas_1_city = None
             born_overseas_2 = born_overseas_2_area = born_overseas_2_city = None 
@@ -108,17 +95,31 @@ class Scraper:
             crime_robbery_area = crime_robbery_city = None
             crime_sex_offences_area = crime_sex_offences_city = None
             crime_theft_area = crime_theft_city = None
+            recend_sold = []
+            #Create a list of house values and house price and house rent will be there
+            #house_price, house_rent= house_list
+            house_list = []
+            # units_price, units_rent = units
+            units = []
+            #land_price, land_rent = lands
+            lands = []
+            agents = []
+            features = []
+            schools = []
+            
             td = soup.select("td")
             tr = soup.select("tr")
             # FIND ADDRESS
-            for numt in range(len(td)):
+            for t in td:
                 try:
-                    bname = td[numt].select("b")[0]
-                    if ", " in bname:
+                    bname = t.select("b")[0].text
+                    if "," in bname:
                         address = bname
+                        break
                 except:
                     pass
             features_num = 1
+            print("\033[30mADDRESS IS: %s\033[0m" %address)
 
             if address != None:
                 forms = soup.select("form")
@@ -221,18 +222,31 @@ class Scraper:
                                 schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
             try:
                 house_price, house_rent= house_list
-            except IndexError:
-                house_price, *args = house_list
+            except ValueError:
+                try:
+                    house_price, *args = house_list
+                    house_rent = None
+                except ValueError:
+                    pass
             try:
                 units_price, units_rent = units
-            except IndexError:
-                units_price, *args = units
+            except ValueError:
+                try:
+                    units_price, *args = units
+                    units_rent = None
+                except ValueError:
+                    pass
             try:
                 land_price, land_rent = lands
-            except IndexError:
-                land_price, *args = lands
+            except ValueError:
+                try:
+                    land_price, *args = lands
+                    land_rent = None
+                except ValueError:
+                    pass
 
-            info = [address, house_list, units, schools, agents, municipality, num_of_houses_units, 
+            info = [address, house_price, house_rent, units_price, units_rent, land_price, land_rent, 
+                    municipality, num_of_houses_units, 
                     last_year, land_rent, last_year_high, 
                     born_overseas_1, born_overseas_1_area, born_overseas_1_city,
                     born_overseas_2, born_overseas_2_area, born_overseas_2_city, 
@@ -245,12 +259,12 @@ class Scraper:
                     crime_robbery_area, crime_robbery_city,
                     crime_sex_offences_area, crime_sex_offences_city,
                     crime_theft_area, crime_theft_city,
-                    ] + features + agents
-            print(info)
-            print("Nap time")
+                    ] + features + agents + schools
+            #print(info)
+            #print("Nap time")
             # FOR TEST IF NO PROXIES
-            self.nap
-            print("Geting next info")
+            #sleep(10)
+            #print("Geting next info")
             # WE WILL WRITE IT WHEN WE SORT IT OUT :D
             self.write_to_csv(info)
 
