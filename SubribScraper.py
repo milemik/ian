@@ -176,7 +176,7 @@ class SScraper:
                         days_on_market = td[tnum+2].text
                     if "Features" == td[tnum].text:
                         while True:
-                            features.append(td[tnum+features_num])
+                            features.append(td[tnum+features_num].text)
                             features_num += 1
                             if "." not in td[tnum+features_num].text:
                                 break
@@ -239,7 +239,7 @@ class SScraper:
                             if "Note: " in td[tnum+anum].text:
                                 break
                             else:
-                                agents.append([td[tnum+anum].text, td[tnum+anum+1]])
+                                agents.append([td[tnum+anum].text, td[tnum+anum+1].text])
                              
                     if "School Name" in td[tnum].text:
                         snum = 0
@@ -248,7 +248,6 @@ class SScraper:
                             if "school" not in td[tnum+snum].text:
                                 break
                             else:
-                           
                                 schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
             try:
                 house_price, house_rent= house_list
@@ -289,7 +288,7 @@ class SScraper:
                     crime_robbery_area, crime_robbery_city,
                     crime_sex_offences_area, crime_sex_offences_city,
                     crime_theft_area, crime_theft_city,
-                    ] + features + agents + schools
+                    ] + features + [agn for agn in agents] + [sch for sch in schools]
             #print(info)
             #print("Nap time")
             # FOR TEST IF NO PROXIES

@@ -34,14 +34,14 @@ class HScraper:
             fwriter = csv.writer(f)
             fwriter.writerow(csvhead)
 
-    def check_proxie(self):
+    def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
         while True:
             if prox in self.bad_proxies:
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
             else:
-radr, rdate_sold, rprice                break
+                break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         print(proxie)
         error_count = 0
@@ -165,10 +165,7 @@ radr, rdate_sold, rprice                break
         print("Property Description: %s" % pp_des)
         print("Recent Sold: %s" % recend_sold)
         
-        info = [address, sold, last_sold, land_size, agent, distance, pp_des]
-        for r in recend_sold:
-            for i in r:
-                info.append(i)
+        info = [address, sold, last_sold, land_size, agent, distance, pp_des] + recend_sold
         self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
