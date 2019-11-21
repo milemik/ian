@@ -95,7 +95,19 @@ class Scraper:
             agents = []
             features = []
             schools = []
-
+            address = house_list = units = schools = agents = municipality = num_of_houses_units = None 
+            last_year = land_rent = last_year_high = None
+            born_overseas_1 = born_overseas_1_area = born_overseas_1_city = None
+            born_overseas_2 = born_overseas_2_area = born_overseas_2_city = None 
+            born_overseas_3 = born_overseas_3_area = born_overseas_3_city = None
+            born_overseas_4 = born_overseas_4_area = born_overseas_4_city = None
+            born_overseas_5 = born_overseas_5_area = born_overseas_5_city = None
+            income_duration = income_duration_area = income_duration_city = None
+            crime_assault_area = crime_assault_city = None
+            crime_demage_area = crime_demage_city = None
+            crime_robbery_area = crime_robbery_city = None
+            crime_sex_offences_area = crime_sex_offences_city = None
+            crime_theft_area = crime_theft_city = None
             td = soup.select("td")
             tr = soup.select("tr")
             # FIND ADDRESS
@@ -205,7 +217,20 @@ class Scraper:
                             if "school" not in td[tnum+snum].text:
                                 break
                             else:
+                           
                                 schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
+            try:
+                house_price, house_rent= house_list
+            except IndexError:
+                house_price, *args = house_list
+            try:
+                units_price, units_rent = units
+            except IndexError:
+                units_price, *args = units
+            try:
+                land_price, land_rent = lands
+            except IndexError:
+                land_price, *args = lands
 
             info = [address, house_list, units, schools, agents, municipality, num_of_houses_units, 
                     last_year, land_rent, last_year_high, 
@@ -220,7 +245,7 @@ class Scraper:
                     crime_robbery_area, crime_robbery_city,
                     crime_sex_offences_area, crime_sex_offences_city,
                     crime_theft_area, crime_theft_city,
-                    ]
+                    ] + features + agents
             print(info)
             print("Nap time")
             # FOR TEST IF NO PROXIES
