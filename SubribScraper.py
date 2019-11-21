@@ -27,6 +27,28 @@ class SScraper:
         self.DOMAIN = "http://house.speakingsame.com/"
         self.LINKS = []
         self.bad_proxies = []
+        # CREATE HEADER FOR FILE
+        head = ["address", "house_price", "house_rent", "units_price", "units_rent", "land_price", "land_rent", 
+                    "municipality", "num_of_houses_units", 
+                    "last_year", "land_rent", "last_year_high", 
+                    'born_overseas_1', 'born_overseas_1_area', 'born_overseas_1_city',
+                    'born_overseas_2', 'born_overseas_2_area', 'born_overseas_2_city', 
+                    'born_overseas_3', 'born_overseas_3_area', 'born_overseas_3_city',
+                    'born_overseas_4', 'born_overseas_4_area', 'born_overseas_4_city',
+                    'born_overseas_5', 'born_overseas_5_area', 'born_overseas_5_city',
+                    'income_duration', 'income_duration_area', 'income_duration_city',
+                    'crime_assault_area', 'crime_assault_city',
+                    'crime_demage_area', 'crime_demage_city',
+                    'crime_robbery_area', 'crime_robbery_city',
+                    'crime_sex_offences_area', 'crime_sex_offences_city',
+                    'crime_theft_area', 'crime_theft_city',
+                    "features + agents + schools"
+                ]
+        self.FILENAME = f"SDATA-{self.AREA}.csv"
+        with open(self.FILENAME, "w") as f:
+            fwriter = csv.writer(f)
+            fwriter.writerow(head)
+
 
     def check_proxie(self):
         proxie_link = self.PROXIES[str(
@@ -277,7 +299,7 @@ class SScraper:
             self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
-        with open(f"SDATA-{self.AREA}.csv", "a") as f:
+        with open(self.FILENAME, "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 '''

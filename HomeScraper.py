@@ -25,6 +25,14 @@ class HScraper:
         self.DOMAIN = "http://house.ksou.cn/"
         self.LINKS = []
         self.bad_proxies = []
+        # CREATE HEADER FOR CSV
+        csvhead = ["Home Address", "Price Sold", "Last Sold", "Land Size", "Agent", "Distance", "Property Description", 
+                    "Recent Sold: Address", "Recent Sold: date", "Recent Sold: price"
+                  ]
+        self.FILENAME = f"HDATA-{self.AREA}.csv"
+        with open(self.FILENAME, "w") as f:
+            fwriter = csv.writer(f)
+            fwriter.writerow(csvhead)
 
     def check_proxie(self):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
@@ -33,7 +41,7 @@ class HScraper:
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
             else:
-                break
+radr, rdate_sold, rprice                break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         print(proxie)
         error_count = 0
@@ -164,7 +172,7 @@ class HScraper:
         self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
-        with open(f"HDATA-{self.AREA}.csv", "a") as f:
+        with open(self.FILENAME, "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 
