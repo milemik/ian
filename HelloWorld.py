@@ -157,7 +157,7 @@ class Scraper:
         self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
-        with open("DATA.csv", "a") as f:
+        with open(f"HDATA-{self.AREA}.csv", "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 

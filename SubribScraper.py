@@ -17,8 +17,8 @@ class Scraper:
     def __init__(self):
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
-        AREA = "nt"
-        self.URL = f"http://house.speakingsame.com/profile.php?q={AREA}"
+        self.AREA = "nt"
+        self.URL = f"http://house.speakingsame.com/profile.php?q={self.AREA}"
         #self.PROXIE = {"https": "https://195.46.20.146:21231",
         #               "http": "http://195.46.20.146:21231"}
         self.HEADERS = {
@@ -51,8 +51,17 @@ class Scraper:
             try:
                 #print(proxie)
                 r = requests.get(url, proxies=proxie, headers=self.HEADERS)
-                print(r)
-                break
+                #print(r)
+                if r.status_code == 200:
+                    print("RESPONSE: OK")
+                    break
+                else:
+                    error_count += 1
+                    print("RESPONSE: BAD")
+                    self.bad_proxies.append(prox)
+                    prox = self.PROXIES[str(
+                        random.randint(0, len(self.PROXIES) - 1))]
+                    proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
             except:
                 print(f"Bad proxie: {prox}")
                 error_count += 1
@@ -112,14 +121,13 @@ class Scraper:
             # FIND ADDRESS
             for t in td:
                 try:
-                    bname = t.select("b")[0].text
-                    if "," in bname:
-                        address = bname
+                    if "," in t.select("b")[0].text:
+                        address = t.select("b")[0].text
                         break
                 except:
                     pass
             features_num = 1
-            print("\033[30mADDRESS IS: %s\033[0m" %address)
+            print("ADDRESS IS: %s" %address)
 
             if address != None:
                 forms = soup.select("form")
@@ -269,7 +277,7 @@ class Scraper:
             self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
-        with open("SDATA.csv", "a") as f:
+        with open(f"SDATA-{self.AREA}.csv", "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 
