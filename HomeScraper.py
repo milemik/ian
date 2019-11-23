@@ -37,6 +37,8 @@ class HScraper:
             fwriter = csv.writer(f)
             fwriter.writerow(csvhead)
 
+    '''
+    # DO NOT USE THIS UNLESS YOU WANT TO GAMBLE :P
     def send_req(self, url):
         # NO PROXIES FOR TESTING, DELAY 10 SECONDS
         print("ITS RISKY TO CRAWL WITH NO PROXIES")
@@ -44,8 +46,8 @@ class HScraper:
         sleep(10)
         soup = bs(r.text, "html.parser")
         return soup
-
     '''
+    
     def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
         while True:
@@ -84,7 +86,7 @@ class HScraper:
                 proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         soup = bs(r.text, "html.parser")
         return soup
-    '''
+
     def get_links(self):
         soup = self.send_req(self.URL)
 
