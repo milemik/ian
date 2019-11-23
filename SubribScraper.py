@@ -27,6 +27,7 @@ class SScraper:
         self.DOMAIN = "http://house.speakingsame.com/"
         self.LINKS = []
         self.bad_proxies = []
+        self.TIMEOUT = 10
         # CREATE HEADER FOR FILE
         head = ["address", "house_price", "house_rent", "units_price", "units_rent", "land_price", "land_rent", 
                     "municipality", "num_of_houses_units", 
@@ -42,7 +43,7 @@ class SScraper:
                     'crime_robbery_area', 'crime_robbery_city',
                     'crime_sex_offences_area', 'crime_sex_offences_city',
                     'crime_theft_area', 'crime_theft_city',
-                    "features + agents + schools"
+                    "features", "agents", "schools"
                 ]
         self.FILENAME = f"SDATA-{self.AREA}.csv"
         with open(self.FILENAME, "w") as f:
@@ -72,7 +73,7 @@ class SScraper:
         while True:
             try:
                 #print(proxie)
-                r = requests.get(url, proxies=proxie, headers=self.HEADERS)
+                r = requests.get(url, proxies=proxie, headers=self.HEADERS, timeout = self.TIMEOUT)
                 #print(r)
                 if r.status_code == 200:
                     print("RESPONSE: OK")
@@ -240,7 +241,7 @@ class SScraper:
                                 break
                             else:
                                 agents.append([td[tnum+anum].text, td[tnum+anum+1].text])
-                             
+                    '''         
                     if "School Name" in td[tnum].text:
                         snum = 0
                         while True:
@@ -249,6 +250,12 @@ class SScraper:
                                 break
                             else:
                                 schools.append([td[tnum+snum].text, td[tnum+snum+1].text])
+                    '''
+            a_links = soup.select("a")
+            for a in a_links:
+                if " School" in a.text:
+                    schools.append(a.text)
+
             try:
                 house_price, house_rent= house_list
             except ValueError:
@@ -288,7 +295,7 @@ class SScraper:
                     crime_robbery_area, crime_robbery_city,
                     crime_sex_offences_area, crime_sex_offences_city,
                     crime_theft_area, crime_theft_city,
-                    ] + features + [agn for agn in agents] + [sch for sch in schools]
+                    features, agents, schools]
             #print(info)
             #print("Nap time")
             # FOR TEST IF NO PROXIES

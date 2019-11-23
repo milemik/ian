@@ -27,6 +27,7 @@ class HScraper:
         self.DOMAIN = "http://house.ksou.cn/"
         self.LINKS = []
         self.bad_proxies = []
+        self.TIMEOUT = 10
         # CREATE HEADER FOR CSV
         #info = [address, sold, last_sold, land_size, agent, distance, pp_des] + recend_sold
         csvhead = ["Home Address", "Price Sold", "Last Sold", "Land Size", "Agent", "Distance", "Property Description", 
@@ -62,7 +63,7 @@ class HScraper:
         while True:
             try:
                 #print(proxie)
-                r = requests.get(url, proxies=proxie, headers=self.HEADERS)
+                r = requests.get(url, proxies=proxie, headers=self.HEADERS, timeout = self.TIMEOUT)
                 #print(r)
                 if r.status_code == 200:
                     print("RESPONSE: OK")
