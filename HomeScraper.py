@@ -4,6 +4,8 @@ import random
 # from get_proxies import ProxieGet
 import json
 import csv
+from time import sleep
+import re
 
 '''
     THIS IS NOT SOME HELLO WORLD FILE, ITS A SCRAPERRRRR!!!!!!!
@@ -26,6 +28,7 @@ class HScraper:
         self.LINKS = []
         self.bad_proxies = []
         # CREATE HEADER FOR CSV
+        #info = [address, sold, last_sold, land_size, agent, distance, pp_des] + recend_sold
         csvhead = ["Home Address", "Price Sold", "Last Sold", "Land Size", "Agent", "Distance", "Property Description", 
                     "Recent Sold: Address", "Recent Sold: date", "Recent Sold: price"
                   ]
@@ -34,6 +37,15 @@ class HScraper:
             fwriter = csv.writer(f)
             fwriter.writerow(csvhead)
 
+    def send_req(self, url):
+        # NO PROXIES FOR TESTING, DELAY 10 SECONDS
+        print("ITS RISKY TO CRAWL WITH NO PROXIES")
+        r = requests.get(url, headers = self.HEADERS)
+        sleep(10)
+        soup = bs(r.text, "html.parser")
+        return soup
+
+    '''
     def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
         while True:
@@ -72,7 +84,7 @@ class HScraper:
                 proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         soup = bs(r.text, "html.parser")
         return soup
-
+    '''
     def get_links(self):
         soup = self.send_req(self.URL)
 
@@ -134,13 +146,17 @@ class HScraper:
                 sold = td[t].text.split("Sold")[1].split()[0]
             if "Last Sold" in td[t].text and last_sold == None and "}" not in td[t].text:
                 last_sold = td[t].text.split("Last Sold")[1].split()[0]
-            if "Land size:" in td[t].text and land_size == None:
-                land_size = td[t].text.split(":")[1]
+            #if "Land size:" in td[t].text and land_size == None and "}" not in td[t].text:
+            if "Land size:" in td[t].text and "}" not in td[t].text:
+                #print(td[t].text)
+                land_sze = re.findall("\d+ sqm|\d+,\d+ sqm", td[t].text)
+                if len(land_sze) > 0:
+                    land_size = land_sze[0]
             if "Agent:" in td[t].text and agent == None and "}" not in td[t].text:
-                agent = td[t].text.split("Agent:")[1]
+                agent = td[t].text.split("Agent:")[1].split("Distance:")[0]
             if "Distance:" in td[t].text and distance == None and "{" not in td[t].text:
-                distance = td[t].text.split("Distance:")[1]
-            if "Property Description:" in td[t].text and pp_des == None and "{" not in td[t].text:
+                distance = td[t].text.split("Distance:")[1].replace(";", " ")
+            if "Property Description:" == td[t].text and pp_des == None and "{" not in td[t].text:
                 pp_des = td[t + 1].text.encode("utf8")
         for t in range(len(tr)):
             if "AddressDatePrice" in tr[t].text:
@@ -157,16 +173,21 @@ class HScraper:
                         if "Address" not in radr and [radr, rdate_sold, rprice] not in recend_sold:
                             recend_sold.append([radr, rdate_sold, rprice])
 
-        print("Address: %s" % address)
-        print("Sold: %s" % sold)
-        print("Last Sold: %s" % last_sold)
-        print("Land Size: %s" % land_size)
-        print("Agent: %s" % agent)
+        #print("Address: %s" % address)
+        #print("Sold: %s" % sold)
+        #print("Last Sold: %s" % last_sold)
+        #print("Land Size: %s" % land_size)
+        #print("Agent: %s" % agent)
         print("Distance: %s" % distance)
-        print("Property Description: %s" % pp_des)
-        print("Recent Sold: %s" % recend_sold)
+        #print("Property Description: %s" % pp_des)
+        #print("Recent Sold: %s" % recend_sold)
+        rs_for_csv = []
+        if len(recend_sold) > 0:
+            for rs_csv in recend_sold:
+                for fs_c in rs_csv:
+                    rs_for_csv.append(fs_c)
         
-        info = [address, sold, last_sold, land_size, agent, distance, pp_des] + recend_sold
+        info = [address, sold, last_sold, land_size, agent, distance, pp_des] + rs_for_csv #recend_sold
         self.write_to_csv(info)
 
     def write_to_csv(self, iinfo):
