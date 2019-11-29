@@ -5,6 +5,7 @@ import random
 import json
 import csv
 from time import sleep
+import re
 
 '''
    Suburb Profiles ARE HERE 
@@ -15,8 +16,14 @@ from time import sleep
 class SScraper:
 
     def __init__(self, area):
+        '''
+        with open("proxies.txt", "r") as f:
+            read_txt = f.read()
+        self.PROXIES = re.findall("\d+.\d+.\d+.\d+:\d+", read_txt)
+        '''
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
+        
         self.AREA = area
         self.URL = f"http://house.speakingsame.com/profile.php?q={self.AREA}"
         #self.PROXIE = {"https": "https://195.46.20.146:21231",
@@ -52,8 +59,11 @@ class SScraper:
 
 
     def check_proxie(self):
+        proxie_link = random.choice(self.PROXIES)
+        
         proxie_link = self.PROXIES[str(
             random.randint(0, len(self.PROXIES) - 1))]
+        
         proxie = {{"https": f"https://{proxie_link}",
                    "http": f"http://{proxie_link}"}}
         r = requests.get(self.PURL, proxies=self.PROXIE, headers=self.HEADERS)
@@ -61,10 +71,12 @@ class SScraper:
 
     def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
+        #prox = random.choice(self.PROXIES)
         while True:
             if prox in self.bad_proxies:
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
+                #prox = random.choice(self.PROXIES)
             else:
                 break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
@@ -84,6 +96,7 @@ class SScraper:
                     self.bad_proxies.append(prox)
                     prox = self.PROXIES[str(
                         random.randint(0, len(self.PROXIES) - 1))]
+                    #prox = random.choice(self.PROXIES)
                     proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
             except requests.exceptions.RequestException:
                 print(f"Bad proxie: {prox}")
@@ -94,6 +107,7 @@ class SScraper:
                 self.bad_proxies.append(prox)
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
+                #prox = random.choice(self.PROXIES)
                 proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         soup = bs(r.text, "html.parser")
         return soup

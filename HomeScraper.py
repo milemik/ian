@@ -17,10 +17,13 @@ class HScraper:
     def __init__(self, area):
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
+        '''
+        with open("proxies.txt", "r") as f:
+            read_txt = f.read()
+        self.PROXIES = re.findall("\d+.\d+.\d+.\d+:\d+", read_txt)
+        '''
         self.AREA = area
         self.URL = f"http://house.ksou.cn/p.php?q={self.AREA}"
-        self.PROXIE = {"https": "https://195.46.20.146:21231",
-                       "http": "http://195.46.20.146:21231"}
         self.HEADERS = {
             "User-Agent": "Mozila Firefox 1243.43435 NT Windows 10 13243"}
         self.PURL = "https://api.myip.com"
@@ -51,10 +54,12 @@ class HScraper:
     
     def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
+        #prox = random.choice(self.PROXIES)
         while True:
             if prox in self.bad_proxies:
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
+                #prox = random.choice(self.PROXIES)
             else:
                 break
         proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
@@ -74,6 +79,7 @@ class HScraper:
                     self.bad_proxies.append(prox)
                     prox = self.PROXIES[str(
                         random.randint(0, len(self.PROXIES) - 1))]
+                    #prox = random.choice(self.PROXIES)
                     proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
             except requests.exceptions.RequestException:
                 print(f"Bad proxie: {prox}")
@@ -84,6 +90,7 @@ class HScraper:
                 self.bad_proxies.append(prox)
                 prox = self.PROXIES[str(
                     random.randint(0, len(self.PROXIES) - 1))]
+                #prox = random.choice(self.PROXIES)
                 proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         soup = bs(r.text, "html.parser")
         return soup
