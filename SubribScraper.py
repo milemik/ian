@@ -6,6 +6,8 @@ import json
 import csv
 from time import sleep
 import re
+import os
+import pandas as pd
 
 '''
    Suburb Profiles ARE HERE 
@@ -24,6 +26,7 @@ class SScraper:
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
         
+        #self.PROXIES = proxies
         self.AREA = area
         self.URL = f"http://house.speakingsame.com/profile.php?q={self.AREA}"
         #self.PROXIE = {"https": "https://195.46.20.146:21231",
@@ -36,7 +39,7 @@ class SScraper:
         self.bad_proxies = []
         self.TIMEOUT = 10
         # CREATE HEADER FOR FILE
-        head = ["address", "house_price", "house_rent", "units_price", "units_rent", "land_price", "land_rent", 
+        head = ["Postcode", "address", "house_price", "house_rent", "units_price", "units_rent", "land_price", "land_rent", 
                     "municipality", "num_of_houses_units", 
                     "last_year", "land_rent", "last_year_high", 
                     'born_overseas_1', 'born_overseas_1_area', 'born_overseas_1_city',
@@ -52,12 +55,20 @@ class SScraper:
                     'crime_theft_area', 'crime_theft_city',
                     "features", "agents", "schools"
                 ]
-        self.FILENAME = f"SDATA-{self.AREA}.csv"
-        with open(self.FILENAME, "w") as f:
-            fwriter = csv.writer(f)
-            fwriter.writerow(head)
 
 
+        self.FILENAME = "SDATA.csv"
+        if self.FILENAME not in os.listdir():
+        #self.FILENAME = f"SDATA-{self.AREA}.csv"
+            with open(self.FILENAME, "w") as f:
+                fwriter = csv.writer(f)
+                fwriter.writerow(head)
+        '''
+        self.CHECK_LINKS = "checked.txt"
+        if self.CHECK_LINKS not in os.listdir():
+            with open(self.CHECK_LINKS, "w") as f:
+                f.write("links\n")
+        '''
     def check_proxie(self):
         proxie_link = random.choice(self.PROXIES)
         
@@ -123,10 +134,19 @@ class SScraper:
                 self.LINKS.append(x['href'])
         print("Found %d" % len(self.LINKS))
 
+
+    def check_link(self):
+        # CHECK IF URL IS CHECKED
+        df = pd.read_csv(self.CHECK_LINKS)
+        l = df['links'].values.tolist()
+        return l
+
     def get_info(self):
         for link in self.LINKS:
             full_link = self.DOMAIN + link 
             print(full_link)
+            #checked_urls = self.check_link()
+            #if full_link not in checked_urls:   
             soup = self.send_req(full_link)
             address = house_price = house_rent = units_price = units_rent = land_price = land_rent = schools = agents = municipality = num_of_houses_units = None 
             last_year = land_rent = last_year_high = None
@@ -295,7 +315,7 @@ class SScraper:
                 except ValueError:
                     pass
 
-            info = [address, house_price, house_rent, units_price, units_rent, land_price, land_rent, 
+            info = [self.AREA, address, house_price, house_rent, units_price, units_rent, land_price, land_rent, 
                     municipality, num_of_houses_units, 
                     last_year, land_rent, last_year_high, 
                     born_overseas_1, born_overseas_1_area, born_overseas_1_city,
@@ -317,6 +337,14 @@ class SScraper:
             #print("Geting next info")
             # WE WILL WRITE IT WHEN WE SORT IT OUT :D
             self.write_to_csv(info)
+            #self.enter_checked(full_link)
+            #else:
+            #    print(f"{full_link} CHEKCED!!!!!!")
+
+    def enter_checked(self, furl):
+        with open(self.CHECK_LINKS, "a") as f:
+            f.write(f"{furl}\n")
+
 
     def write_to_csv(self, iinfo):
         with open(self.FILENAME, "a") as f:

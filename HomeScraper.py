@@ -6,7 +6,8 @@ import json
 import csv
 from time import sleep
 import re
-
+import os
+import pandas as pd
 '''
     THIS IS NOT SOME HELLO WORLD FILE, ITS A SCRAPERRRRR!!!!!!!
 '''
@@ -15,6 +16,8 @@ import re
 class HScraper:
 
     def __init__(self, area):
+        #self.PROXIES = proxies
+        #'''
         with open("proxies.json", "r") as f:
             self.PROXIES = json.load(f)
         '''
@@ -30,17 +33,29 @@ class HScraper:
         self.DOMAIN = "http://house.ksou.cn/"
         self.LINKS = []
         self.bad_proxies = []
-        self.TIMEOUT = 10
+        self.TIMEOUT = 20
         # CREATE HEADER FOR CSV
         #info = [address, sold, last_sold, land_size, agent, distance, pp_des] + recend_sold
-        csvhead = ["Home Address", "Price Sold", "Last Sold", "Land Size", "Agent", "Distance", "Property Description", 
+        csvhead = ["Postcode", "Home Address", "Price Sold", "Last Sold", "Land Size", "Agent", "Distance", "Property Description", 
                     "Recent Sold: Address", "Recent Sold: date", "Recent Sold: price"
                   ]
-        self.FILENAME = f"HDATA-{self.AREA}.csv"
-        with open(self.FILENAME, "w") as f:
-            fwriter = csv.writer(f)
-            fwriter.writerow(csvhead)
-
+        self.FILENAME = "HDATA.csv"
+        #self.FILENAME = f"HDATA-{self.AREA}.csv"
+        if self.FILENAME not in os.listdir():
+            with open(self.FILENAME, "w") as fn:
+                fwriter = csv.writer(fn)
+                fwriter.writerow(csvhead)
+        sleep(5)
+        self.CHECK_LINKS = "checked.txt"
+        #self.checked_urls = self.check_link()
+        #df = pd.read_csv("checked.txt")
+        #self.checked_urls = df['links'].values.tolist()
+        self.checked_urls = []
+        '''
+        if self.CHECK_LINKS not in os.listdir():
+            with open(self.CHECK_LINKS, "w") as fl:
+                fl.write("links\n")
+        '''
     '''
     # DO NOT USE THIS UNLESS YOU WANT TO GAMBLE :P
     def send_req(self, url):
@@ -51,7 +66,12 @@ class HScraper:
         soup = bs(r.text, "html.parser")
         return soup
     '''
-    
+    def send_req(self, url):
+        r = requests.get(url, proxies = self.STATIC_PROXIE, timeout = self.TIMEOUT)
+        soup = bs(r.text, "html.parser")
+        return soup
+
+
     def send_req(self, url):
         prox = self.PROXIES[str(random.randint(0, len(self.PROXIES) - 1))]
         #prox = random.choice(self.PROXIES)
@@ -93,6 +113,7 @@ class HScraper:
                 #prox = random.choice(self.PROXIES)
                 proxie = {"https": f"https://{prox}", "http": f"http://{prox}"}
         soup = bs(r.text, "html.parser")
+        #sleep(3)
         return soup
 
     def get_links(self):
@@ -139,75 +160,100 @@ class HScraper:
             for h_link in h_links:
                 self.hous_info(h_link)
 
-    def hous_info(self, url):
-        print(url)
-        soup = self.send_req(url)
-        try:
-            address = soup.select("span.addr")[0].text
-        except IndexError:
-            print("ERROR IN %s" % url)
-        agent = sold = last_sold = land_size = distance = pp_des = None
-        recend_sold = []
-        # print(address)
-        td = soup.select("td")
-        tr = soup.select("tr")
-        for t in range(len(td)):
-            if "Sold $" in td[t].text and sold == None and "}" not in td[t].text:
-                sold = td[t].text.split("Sold")[1].split()[0]
-            if "Last Sold" in td[t].text and last_sold == None and "}" not in td[t].text:
-                last_sold = td[t].text.split("Last Sold")[1].split()[0]
-            #if "Land size:" in td[t].text and land_size == None and "}" not in td[t].text:
-            if "Land size:" in td[t].text and "}" not in td[t].text:
-                #print(td[t].text)
-                land_sze = re.findall("\d+ sqm|\d+,\d+ sqm", td[t].text)
-                if len(land_sze) > 0:
-                    land_size = land_sze[0]
-            if "Agent:" in td[t].text and agent == None and "}" not in td[t].text:
-                agent = td[t].text.split("Agent:")[1].split("Distance:")[0]
-            if "Distance:" in td[t].text and distance == None and "{" not in td[t].text:
-                distance = td[t].text.split("Distance:")[1].replace(";", " ")
-            if "Property Description:" == td[t].text and pp_des == None and "{" not in td[t].text:
-                pp_des = td[t + 1].text.encode("utf8")
-        for t in range(len(tr)):
-            if "AddressDatePrice" in tr[t].text:
-                for n in range(10):
-                    if "Date" in tr[t + n].text or ">>" in tr[t + n].text or "}" in tr[t + n].text:
-                        pass
-                    if "More records" in tr[t + n].text:
-                        break
-                    else:
-                        rs = tr[t + n].select("td")
-                        radr = rs[0].text
-                        rdate_sold = rs[1].text
-                        rprice = rs[2].text
-                        if "Address" not in radr and [radr, rdate_sold, rprice] not in recend_sold:
-                            recend_sold.append([radr, rdate_sold, rprice])
+    
+    def check_link(self):
+        # CHECK IF URL IS CHECKED
+        df = pd.read_csv(self.CHECK_LINKS)
+        l = df['links'].values.tolist()
+        return l
 
-        #print("Address: %s" % address)
-        #print("Sold: %s" % sold)
-        #print("Last Sold: %s" % last_sold)
-        #print("Land Size: %s" % land_size)
-        #print("Agent: %s" % agent)
-        print("Distance: %s" % distance)
-        #print("Property Description: %s" % pp_des)
-        #print("Recent Sold: %s" % recend_sold)
-        rs_for_csv = []
-        if len(recend_sold) > 0:
-            for rs_csv in recend_sold:
-                for fs_c in rs_csv:
-                    rs_for_csv.append(fs_c)
+    def enter_checked(self, furl):
+        with open(self.CHECK_LINKS, "a") as f:
+            f.write(f"{furl}\n")
+
+    def hous_info(self, url):
+        #checked_urls = self.check_link()
         
-        info = [address, sold, last_sold, land_size, agent, distance, pp_des] + rs_for_csv #recend_sold
-        self.write_to_csv(info)
+        if url not in self.checked_urls:
+            print(url)
+            soup = self.send_req(url)
+            addr_error = 0
+            while True:
+                try:
+                    address = soup.select("span.addr")[0].text
+                    break
+                except IndexError:
+                    print("ERROR IN %s" % url)
+                    soup = self.send_req(url)
+                    addr_error += 1
+                    if addr_error > 3:
+                        break
+                        address == None
+            agent = sold = last_sold = land_size = distance = pp_des = None
+            recend_sold = []
+            # print(address)
+            td = soup.select("td")
+            tr = soup.select("tr")
+            for t in range(len(td)):
+                if "Sold $" in td[t].text and sold == None and "}" not in td[t].text:
+                    sold = td[t].text.split("Sold")[1].split()[0]
+                if "Last Sold" in td[t].text and last_sold == None and "}" not in td[t].text:
+                    last_sold = td[t].text.split("Last Sold")[1].split()[0]
+                #if "Land size:" in td[t].text and land_size == None and "}" not in td[t].text:
+                if "Land size:" in td[t].text and "}" not in td[t].text:
+                    #print(td[t].text)
+                    land_sze = re.findall("\d+ sqm|\d+,\d+ sqm", td[t].text)
+                    if len(land_sze) > 0:
+                        land_size = land_sze[0]
+                if "Agent:" in td[t].text and agent == None and "}" not in td[t].text:
+                    agent = td[t].text.split("Agent:")[1].split("Distance:")[0]
+                if "Distance:" in td[t].text and distance == None and "{" not in td[t].text:
+                    distance = td[t].text.split("Distance:")[1].replace(";", " ")
+                if "Property Description:" == td[t].text and pp_des == None and "{" not in td[t].text:
+                    pp_des = td[t + 1].text.encode("utf8")
+            for t in range(len(tr)):
+                if "AddressDatePrice" in tr[t].text:
+                    for n in range(10):
+                        if "Date" in tr[t + n].text or ">>" in tr[t + n].text or "}" in tr[t + n].text:
+                            pass
+                        if "More records" in tr[t + n].text:
+                            break
+                        else:
+                            rs = tr[t + n].select("td")
+                            radr = rs[0].text
+                            rdate_sold = rs[1].text
+                            rprice = rs[2].text
+                            if "Address" not in radr and [radr, rdate_sold, rprice] not in recend_sold:
+                                recend_sold.append([radr, rdate_sold, rprice])
+
+            #print("Address: %s" % address)
+            #print("Sold: %s" % sold)
+            #print("Last Sold: %s" % last_sold)
+            #print("Land Size: %s" % land_size)
+            #print("Agent: %s" % agent)
+            #print("Distance: %s" % distance)
+            #print("Property Description: %s" % pp_des)
+            #print("Recent Sold: %s" % recend_sold)
+            rs_for_csv = []
+            if len(recend_sold) > 0:
+                for rs_csv in recend_sold:
+                    for fs_c in rs_csv:
+                        rs_for_csv.append(fs_c)
+            
+            info = [self.AREA, address, sold, last_sold, land_size, agent, distance, pp_des] + rs_for_csv #recend_sold
+            self.write_to_csv(info)
+            self.enter_checked(url)
+        else:
+            print(f"{url} CHECKED!!!!!!!!!!!!!")
 
     def write_to_csv(self, iinfo):
         with open(self.FILENAME, "a") as f:
             fwriter = csv.writer(f)
             fwriter.writerow(iinfo)
 
-'''
-s = HScraper("nt")
+#'''
+s = HScraper("0800")
 # s.check_proxie()
 s.get_links()
 s.get_house_links()
-'''
+#'''

@@ -15,9 +15,9 @@ class ProxieGet:
 		options = Options()
 		options.add_argument("--headless")
 		print("Opening driver")
-		#self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver"), options = options)
+		self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver"), options = options)
 		self.proxies = []
-		self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver"))
+		#self.driver = webdriver.Chrome(executable_path = os.path.join("chromedriver", "chromedriver"))
 
 	def req(self):
 		break_stat = False
